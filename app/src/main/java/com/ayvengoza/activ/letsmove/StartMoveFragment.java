@@ -1,6 +1,7 @@
 package com.ayvengoza.activ.letsmove;
 
 import android.app.PendingIntent;
+import android.arch.persistence.room.Room;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -27,6 +29,7 @@ import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by ang on 21.11.17.
@@ -39,6 +42,8 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
     private ActivityDetectionBroadcastReceiver mBroadcastReceiver;
     private Button mRequestUpdatesBtn;
     private Button mRemoveUpdatesBtn;
+    private TextView mTextView;
+    private AppDataBase db;
 
     public static StartMoveFragment newInstance(){
         Bundle args = new Bundle();
@@ -50,6 +55,8 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        db = Room.databaseBuilder(getActivity().getApplicationContext(),
+                AppDataBase.class, AppDataBase.DB_NAME).build();
         mBroadcastReceiver = new ActivityDetectionBroadcastReceiver();
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
                 .addApi(ActivityRecognition.API)
@@ -78,6 +85,7 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_start_move, container, false);
+        mTextView = (TextView) view.findViewById(R.id.text_view);
         mRequestUpdatesBtn = (Button) view.findViewById(R.id.request_updates_button);
         mRequestUpdatesBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -113,6 +121,18 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
         super.onStop();
         if(mGoogleApiClient.isConnected())
             mGoogleApiClient.disconnect();
+    }
+
+    private void upDateActives(){
+        List<Active> actives = db.getActiveDao().getAllActives();
+        StringBuilder stringBuilder = new StringBuilder();
+        for(Active active : actives){
+            stringBuilder.append("T:" + active.getTime() +
+                    ",  Still:" + active.getStill() +
+                    ", OnFoot:" + active.getOnFoot() +
+                    ", OnWalk: " + active.getWalking() + "/n");
+        }
+        mTextView.setText(stringBuilder.toString());
     }
 
     public void requestActivityUpdates() {

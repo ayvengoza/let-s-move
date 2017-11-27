@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.TextureView;
 
 import com.google.android.gms.location.ActivityRecognitionResult;
 import com.google.android.gms.location.DetectedActivity;
@@ -34,11 +33,13 @@ public class ActivityIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
-        Intent i = new Intent(STRING_ACTION);
-        ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
-        i.putExtra(STRING_EXTRA, detectedActivities);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(i);
-        Log.i(TAG, "Result: " + result.toString());
+        if(ActivityRecognitionResult.hasResult(intent)){
+            ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
+            ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
+            Intent i = new Intent(STRING_ACTION);
+            i.putExtra(STRING_EXTRA, detectedActivities);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(i);
+            Log.i(TAG, "Result: " + result.toString());
+        }
     }
 }

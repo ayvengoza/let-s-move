@@ -22,7 +22,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Result;
 import com.google.android.gms.common.api.ResultCallback;
 import com.google.android.gms.location.ActivityRecognition;
+import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
+import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
 
@@ -113,40 +115,18 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
             mGoogleApiClient.disconnect();
     }
 
-    public String getDetectedActivity(int detectedActivityType){
-        Resources resources = getActivity().getResources();
-        switch(detectedActivityType){
-            case DetectedActivity.IN_VEHICLE:
-                return resources.getString(R.string.in_vehicle);
-            case DetectedActivity.ON_BICYCLE:
-                return resources.getString(R.string.on_bicycle);
-            case DetectedActivity.ON_FOOT:
-                return resources.getString(R.string.on_foot);
-            case DetectedActivity.RUNNING:
-                return resources.getString(R.string.running);
-            case DetectedActivity.WALKING:
-                return resources.getString(R.string.walking);
-            case DetectedActivity.STILL:
-                return resources.getString(R.string.still);
-            case DetectedActivity.TILTING:
-                return resources.getString(R.string.tilting);
-            case DetectedActivity.UNKNOWN:
-                return resources.getString(R.string.unknown);
-            default:
-                return resources.getString(R.string.unidentifiable_activity, detectedActivityType);
-        }
-    }
-
     public void requestActivityUpdates() {
         if (mGoogleApiClient.isConnected()) {
-            ActivityRecognition.ActivityRecognitionApi
-                    .requestActivityUpdates(mGoogleApiClient, 0, getActivityDetectionPendingIntent());
+            ActivityRecognitionClient activityRecognitionClient =
+                    ActivityRecognition.getClient(getActivity());
+            Task task = activityRecognitionClient.requestActivityUpdates(10_000L, getActivityDetectionPendingIntent());
         }
     }
 
     public void removeActivityUpdates() {
-        ActivityRecognition.ActivityRecognitionApi
-                .removeActivityUpdates(mGoogleApiClient,getActivityDetectionPendingIntent());
+        ActivityRecognitionClient activityRecognitionClient =
+                ActivityRecognition.getClient(getActivity());
+        Task task = activityRecognitionClient.removeActivityUpdates(getActivityDetectionPendingIntent());
     }
 
     private PendingIntent getActivityDetectionPendingIntent() {
@@ -161,6 +141,30 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
 
     public class ActivityDetectionBroadcastReceiver extends BroadcastReceiver{
 
+        public String getDetectedActivity(Context context, int detectedActivityType){
+            Resources resources = context.getResources();
+            switch(detectedActivityType){
+                case DetectedActivity.IN_VEHICLE:
+                    return resources.getString(R.string.in_vehicle);
+                case DetectedActivity.ON_BICYCLE:
+                    return resources.getString(R.string.on_bicycle);
+                case DetectedActivity.ON_FOOT:
+                    return resources.getString(R.string.on_foot);
+                case DetectedActivity.RUNNING:
+                    return resources.getString(R.string.running);
+                case DetectedActivity.WALKING:
+                    return resources.getString(R.string.walking);
+                case DetectedActivity.STILL:
+                    return resources.getString(R.string.still);
+                case DetectedActivity.TILTING:
+                    return resources.getString(R.string.tilting);
+                case DetectedActivity.UNKNOWN:
+                    return resources.getString(R.string.unknown);
+                default:
+                    return resources.getString(R.string.unidentifiable_activity, detectedActivityType);
+            }
+        }
+
         @Override
         public void onReceive(Context context, Intent intent) {
             ArrayList<DetectedActivity> detectedActivities =
@@ -168,7 +172,7 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
             String activityString = "";
             for(DetectedActivity activity : detectedActivities){
                 activityString += " Activity: " +
-                        getDetectedActivity(activity.getType()) + ", Confidence: "+
+                        getDetectedActivity(context, activity.getType()) + ", Confidence: "+
                         activity.getConfidence() + "%\n";
             }
             Log.i(TAG, activityString);

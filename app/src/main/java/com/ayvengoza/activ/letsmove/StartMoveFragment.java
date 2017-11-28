@@ -16,6 +16,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -26,7 +27,9 @@ import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.Task;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by ang on 21.11.17.
@@ -39,6 +42,8 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
     private ActivityDetectionBroadcastReceiver mBroadcastReceiver;
     private Button mRequestUpdatesBtn;
     private Button mRemoveUpdatesBtn;
+    private TextView mTextView;
+    private String mMessage;
 
     public static StartMoveFragment newInstance(){
         Bundle args = new Bundle();
@@ -72,12 +77,15 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
                     }
                 })
                 .build();
+        setRetainInstance(true);
     }
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_start_move, container, false);
+        mTextView = (TextView) view.findViewById(R.id.text_view);
+        mTextView.setText(mMessage);
         mRequestUpdatesBtn = (Button) view.findViewById(R.id.request_updates_button);
         mRequestUpdatesBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,6 +183,10 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
                         getDetectedActivity(context, activity.getType()) + ", Confidence: "+
                         activity.getConfidence() + "%\n";
             }
+            Calendar cal = Calendar.getInstance();
+            SimpleDateFormat  sdf = new SimpleDateFormat("HH:mm:ss");
+            mMessage = sdf.format(cal.getTime()) + "\n" + activityString +"\n"+mMessage;
+            mTextView.setText(mMessage);
             Log.i(TAG, activityString);
         }
     }

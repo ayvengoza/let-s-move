@@ -27,9 +27,12 @@ import com.google.android.gms.location.ActivityRecognitionClient;
 import com.google.android.gms.location.DetectedActivity;
 import com.google.android.gms.tasks.Task;
 
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Created by ang on 21.11.17.
@@ -43,7 +46,6 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
     private Button mRequestUpdatesBtn;
     private Button mRemoveUpdatesBtn;
     private TextView mTextView;
-    private String mMessage;
 
     public static StartMoveFragment newInstance(){
         Bundle args = new Bundle();
@@ -77,7 +79,6 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
                     }
                 })
                 .build();
-        setRetainInstance(true);
     }
 
     @Nullable
@@ -85,7 +86,6 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_start_move, container, false);
         mTextView = (TextView) view.findViewById(R.id.text_view);
-        mTextView.setText(mMessage);
         mRequestUpdatesBtn = (Button) view.findViewById(R.id.request_updates_button);
         mRequestUpdatesBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -100,6 +100,7 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
                 removeActivityUpdates();
             }
         });
+        updateUI();
         return view;
     }
 
@@ -135,6 +136,18 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
         ActivityRecognitionClient activityRecognitionClient =
                 ActivityRecognition.getClient(getActivity());
         Task task = activityRecognitionClient.removeActivityUpdates(getActivityDetectionPendingIntent());
+    }
+
+    private void updateUI(){
+        ActiveLab activeLab = ActiveLab.get(getActivity());
+        List<Active> actives = activeLab.getActives();
+
+        StringBuilder stringBuilder = new StringBuilder();
+        for(Active active : actives){
+            stringBuilder.append(active + "\n");
+        }
+
+        mTextView.setText(stringBuilder.toString());
     }
 
     private PendingIntent getActivityDetectionPendingIntent() {
@@ -177,17 +190,8 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
         public void onReceive(Context context, Intent intent) {
             ArrayList<DetectedActivity> detectedActivities =
                     ActivityIntentService.extractDetectedActivity(intent);
-            String activityString = "";
-            for(DetectedActivity activity : detectedActivities){
-                activityString += " Activity: " +
-                        getDetectedActivity(context, activity.getType()) + ", Confidence: "+
-                        activity.getConfidence() + "%\n";
-            }
-            Calendar cal = Calendar.getInstance();
-            SimpleDateFormat  sdf = new SimpleDateFormat("HH:mm:ss");
-            mMessage = sdf.format(cal.getTime()) + "\n" + activityString +"\n"+mMessage;
-            mTextView.setText(mMessage);
-            Log.i(TAG, activityString);
+            updateUI();
+            Log.d(TAG, "Receive intent in ActivityDetectionBroadcastReceiver");
         }
     }
 }

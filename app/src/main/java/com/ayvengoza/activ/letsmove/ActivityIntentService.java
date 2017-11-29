@@ -27,6 +27,44 @@ public class ActivityIntentService extends IntentService {
         return detectedActivities;
     }
 
+    public static Active getActive(ActivityRecognitionResult result){
+        Active active = new Active();
+        active.setTime(result.getTime());
+        active.setElapsed(result.getElapsedRealtimeMillis());
+
+        ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
+        for(DetectedActivity act : detectedActivities){
+            switch (act.getType()){
+                case DetectedActivity.IN_VEHICLE:
+                    active.setInVehicle(act.getConfidence());
+                    break;
+                case DetectedActivity.ON_BICYCLE:
+                    active.setOnBicycle(act.getConfidence());
+                    break;
+                case DetectedActivity.ON_FOOT:
+                    active.setOnFoot(act.getConfidence());
+                    break;
+                case DetectedActivity.STILL:
+                    active.setStill(act.getConfidence());
+                    break;
+                case DetectedActivity.UNKNOWN:
+                    active.setUnknown(act.getConfidence());
+                    break;
+                case DetectedActivity.TILTING:
+                    active.setTilting(act.getConfidence());
+                    break;
+                case DetectedActivity.WALKING:
+                    active.setWallking(act.getConfidence());
+                    break;
+                case DetectedActivity.RUNNING:
+                    active.setWallking(act.getConfidence());
+                    break;
+            }
+        }
+
+        return active;
+    }
+
     public ActivityIntentService(){
         super(TAG);
     }
@@ -36,6 +74,11 @@ public class ActivityIntentService extends IntentService {
         if(ActivityRecognitionResult.hasResult(intent)){
             ActivityRecognitionResult result = ActivityRecognitionResult.extractResult(intent);
             ArrayList<DetectedActivity> detectedActivities = (ArrayList) result.getProbableActivities();
+
+            ActiveLab activeLab = ActiveLab.get(this);
+            Active active = getActive(result);
+            activeLab.addActive(active);
+
             Intent i = new Intent(STRING_ACTION);
             i.putExtra(STRING_EXTRA, detectedActivities);
             LocalBroadcastManager.getInstance(this).sendBroadcast(i);

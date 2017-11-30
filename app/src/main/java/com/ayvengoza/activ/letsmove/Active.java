@@ -105,9 +105,15 @@ public class Active {
     public String toString() {
         Date date = new Date(mTime);
         SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
-        return "T: " + sdf.format(date) +
-                " still: " + mStill +
-                " onFoot: " + mOnFoot;
+        return "T:" + sdf.format(date) +
+                " ST:" + (int)mStill +
+                " T:" + (int)mTilting +
+                " F:" + (int)mOnFoot +
+                " W:" + (int)mWallking +
+                " R:" + (int)mRunning +
+                " B:" + (int)mOnBicycle +
+                " V:" + (int)mInVehicle +
+                " U:" + (int)mUnknown;
     }
 
 }

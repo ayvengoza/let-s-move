@@ -30,6 +30,7 @@ import com.google.android.gms.tasks.Task;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -129,6 +130,8 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
             ActivityRecognitionClient activityRecognitionClient =
                     ActivityRecognition.getClient(getActivity());
             Task task = activityRecognitionClient.requestActivityUpdates(10_000L, getActivityDetectionPendingIntent());
+            Date date = new Date();
+            AppPreferences.setStartTime(getActivity(), date.getTime());
         }
     }
 
@@ -136,18 +139,22 @@ public class StartMoveFragment extends Fragment implements ResultCallback{
         ActivityRecognitionClient activityRecognitionClient =
                 ActivityRecognition.getClient(getActivity());
         Task task = activityRecognitionClient.removeActivityUpdates(getActivityDetectionPendingIntent());
+        AppPreferences.setStartTime(getActivity(), 0);
     }
 
     private void updateUI(){
-        ActiveLab activeLab = ActiveLab.get(getActivity());
-        List<Active> actives = activeLab.getActives();
+        long time = AppPreferences.getStartTime(getActivity());
+        if(time != 0) {
+            ActiveLab activeLab = ActiveLab.get(getActivity());
+            List<Active> actives = activeLab.getActivesFromTime(time);
 
-        StringBuilder stringBuilder = new StringBuilder();
-        for(Active active : actives){
-            stringBuilder.append(active + "\n");
+            StringBuilder stringBuilder = new StringBuilder();
+            for (Active active : actives) {
+                stringBuilder.append(active + "\n");
+            }
+
+            mTextView.setText(stringBuilder.toString());
         }
-
-        mTextView.setText(stringBuilder.toString());
     }
 
     private PendingIntent getActivityDetectionPendingIntent() {

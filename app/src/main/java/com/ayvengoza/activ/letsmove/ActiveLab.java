@@ -9,6 +9,7 @@ import android.util.Log;
 
 import com.ayvengoza.activ.letsmove.database.ActiveCursorWraper;
 import com.ayvengoza.activ.letsmove.database.ActiveDbHelper;
+import com.ayvengoza.activ.letsmove.database.ActiveDbSchema;
 import com.ayvengoza.activ.letsmove.database.ActiveDbSchema.ActiveTable;
 
 import java.util.ArrayList;
@@ -53,6 +54,23 @@ public class ActiveLab {
         List<Active> actives = new ArrayList<>();
         ActiveCursorWraper cursor = queryActives(null, null);
 
+        try{
+            cursor.moveToFirst();
+            while(!cursor.isAfterLast()){
+                actives.add(cursor.getActive());
+                cursor.moveToNext();
+            }
+        } finally {
+            cursor.close();
+        }
+
+        return actives;
+    }
+
+    public List<Active> getActivesFromTime(long startTime){
+        List<Active> actives = new ArrayList<>();
+        ActiveCursorWraper cursor = queryActives(
+                ActiveTable.Cols.TIME + " > ?", new String[]{String.valueOf(startTime)});
         try{
             cursor.moveToFirst();
             while(!cursor.isAfterLast()){
